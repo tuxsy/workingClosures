@@ -20,56 +20,53 @@ class ImageViewController: UIViewController {
     @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     
     
-    var img1:UIImage?
+    var img1:UIImage?{
+        didSet {
+            DispatchQueue.main.async {
+                self.imageView1.image = self.img1
+            }
+        }
+    }
     
-    var img2:UIImage?
     
-    var img3:UIImage?
+    var img2:UIImage?{
+        didSet {
+            DispatchQueue.main.async {
+                self.imageView2.image = self.img2
+            }
+        }
+    }
+    
+    
+    var img3:UIImage?{
+        didSet {
+            DispatchQueue.main.async {
+                self.imageView3.image = self.img3
+            }
+        }
+    }
+    
 
     
-    var img4:UIImage?
+    var img4:UIImage?{
+        didSet {
+            DispatchQueue.main.async {
+                self.imageView4.image = self.img4
+            }
+        }
+    }
     
-    var closure1:Operation!
-    var closure2:Operation!
-    var closure3:Operation!
-    var closure4:Operation!
     
-    let operationQueue = OperationQueue()
+    var closure1:nothingToNothing!
+    var closure2:nothingToNothing!
+    var closure3:nothingToNothing!
+    var closure4:nothingToNothing!
     
-    let mainOperationQueue = OperationQueue.main
-
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-
-        
-        
-    }
-
-
-    @IBAction func downloadImage(_ sender: Any) {
-        
-        
-        
-//        let button = sender as! UIButton
-//
-//        activityIndicator.startAnimating()
-//        button.isEnabled = false
-//
-//        let myConcurrentQueue = DispatchQueue(label: "MyQueue", attributes: .concurrent)
-//
-//
-//        DispatchQueue.main.async{
-//
-//                self.activityIndicator.stopAnimating()
-//                button.isEnabled = true
-//
-//            }
-        
-        // Do any additional setup after loading the view.
-        
-        closure1 = BlockOperation {
+        closure1 = {
             
             let stringURL = "http://c8.alamy.com/comp/KA3NBR/expo92-district-in-seville-sevilla-spain-white-bioclimatic-sphere-KA3NBR.jpg"
             
@@ -81,7 +78,7 @@ class ImageViewController: UIViewController {
             
         }
         
-        closure2 = BlockOperation {
+        closure2 = {
             
             let stringURL = "https://www.ecestaticos.com/image/clipping/939/56c9f8853cafb0265da40eb3478269a4/expo.jpg"
             
@@ -93,7 +90,7 @@ class ImageViewController: UIViewController {
             
         }
         
-        closure3 = BlockOperation {
+        closure3 =  {
             
             let stringURL = "http://www.hanedanrpg.com/photos/hanedanrpg/12/55932.jpg"
             
@@ -105,7 +102,7 @@ class ImageViewController: UIViewController {
             
         }
         
-        closure4 = BlockOperation {
+        closure4 = {
             
             let stringURL = "http://www.alpha-exposiciones.com/wp-content/uploads/2018/03/marathonweek_expo15_mm-106_r1.jpg"
             
@@ -117,49 +114,37 @@ class ImageViewController: UIViewController {
             
         }
         
-        let viewImage1Operation = BlockOperation {
-            
-            self.imageView1.image = self.img1
-        }
+
         
-        viewImage1Operation.addDependency(closure1)
         
-        let viewImage2Operation = BlockOperation {
-            
-            self.imageView2.image = self.img2
-        }
+    }
+
+
+    @IBAction func downloadImage(_ sender: Any) {
         
-        viewImage2Operation.addDependency(closure2)
-        viewImage2Operation.addDependency(viewImage1Operation)
         
-        let viewImage3Operation = BlockOperation {
-            
-            self.imageView3.image = self.img3
-        }
         
-        viewImage3Operation.addDependency(closure3)
-        viewImage3Operation.addDependency(viewImage2Operation)
+        let button = sender as! UIButton
+
+        activityIndicator.startAnimating()
+        button.isEnabled = false
+
+        let myConcurrentQueue = DispatchQueue(label: "MyQueue", attributes: .concurrent)
         
-        let viewImage4Operation = BlockOperation {
-            
-            self.imageView4.image = self.img4
-        }
+        myConcurrentQueue.async(execute: closure1)
+        myConcurrentQueue.async(execute: closure2)
+        myConcurrentQueue.async(execute: closure3)
+        myConcurrentQueue.async(execute: closure4)
+
+
+        DispatchQueue.main.async{
+
+                self.activityIndicator.stopAnimating()
+                button.isEnabled = true
+
+            }
         
-        viewImage4Operation.addDependency(closure4)
-        viewImage4Operation.addDependency(viewImage3Operation)
-        
-        operationQueue.addOperation(closure1)
-        operationQueue.addOperation(closure2)
-        operationQueue.addOperation(closure3)
-        operationQueue.addOperation(closure4)
-        
-        mainOperationQueue.addOperation(viewImage1Operation)
-        
-        mainOperationQueue.addOperation(viewImage2Operation)
-        
-        mainOperationQueue.addOperation(viewImage3Operation)
-        
-        mainOperationQueue.addOperation(viewImage4Operation)
+
 
     }
 }
