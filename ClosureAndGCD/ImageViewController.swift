@@ -19,103 +19,67 @@ class ImageViewController: UIViewController {
     
     @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     
-    
-    var img1:UIImage?{
-        didSet {
-            DispatchQueue.main.async {
-                self.imageView1.image = self.img1
-            }
-        }
-    }
+    let operationQueue = OperationQueue()
+    let mainOpQueue = OperationQueue.main
     
     
-    var img2:UIImage?{
-        didSet {
-            DispatchQueue.main.async {
-                self.imageView2.image = self.img2
-            }
-        }
-    }
+    var img1:UIImage?
     
+    var img2:UIImage?
     
-    var img3:UIImage?{
-        didSet {
-            DispatchQueue.main.async {
-                self.imageView3.image = self.img3
-            }
-        }
-    }
+    var img3:UIImage?
+    var img4:UIImage?
     
-
-    
-    var img4:UIImage?{
-        didSet {
-            DispatchQueue.main.async {
-                self.imageView4.image = self.img4
-            }
-        }
-    }
-    
-    
-    var closure1:nothingToNothing!
-    var closure2:nothingToNothing!
-    var closure3:nothingToNothing!
-    var closure4:nothingToNothing!
     
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        closure1 = {
-            
-            let stringURL = "http://c8.alamy.com/comp/KA3NBR/expo92-district-in-seville-sevilla-spain-white-bioclimatic-sphere-KA3NBR.jpg"
-            
-            let url = URL(string: stringURL)
-            
-            let imgData = try! Data.init(contentsOf: url!)  // Heavy task.
-            
-            self.img1 = UIImage(data: imgData)
-            
-        }
-        
-        closure2 = {
-            
-            let stringURL = "https://www.ecestaticos.com/image/clipping/939/56c9f8853cafb0265da40eb3478269a4/expo.jpg"
-            
-            let url = URL(string: stringURL)
-            
-            let imgData = try! Data.init(contentsOf: url!)  // Heavy task.
-            
-            self.img2 = UIImage(data: imgData)
-            
-        }
-        
-        closure3 =  {
-            
-            let stringURL = "http://www.hanedanrpg.com/photos/hanedanrpg/12/55932.jpg"
-            
-            let url = URL(string: stringURL)
-            
-            let imgData = try! Data.init(contentsOf: url!)  // Heavy task.
-            
-            self.img3 = UIImage(data: imgData)
-            
-        }
-        
-        closure4 = {
-            
-            let stringURL = "http://www.alpha-exposiciones.com/wp-content/uploads/2018/03/marathonweek_expo15_mm-106_r1.jpg"
-            
-            let url = URL(string: stringURL)
-            
-            let imgData = try! Data.init(contentsOf: url!)  // Heavy task.
-            
-            self.img4 = UIImage(data: imgData)
+
             
         }
         
 
+    
+func giveMeDownloadOperationFor(index:Int) -> DownloadImgOperation
+{
+        var urlString = ""
+    
+        switch index {
+        case 1:
+            urlString = "http://c8.alamy.com/comp/KA3NBR/expo92-district-in-seville-sevilla-spain-white-bioclimatic-sphere-KA3NBR.jpg"
+        case 2:
+            urlString = "https://www.ecestaticos.com/image/clipping/939/56c9f8853cafb0265da40eb3478269a4/expo.jpg"
+        case 3:
+            urlString = "http://www.hanedanrpg.com/photos/hanedanrpg/12/55932.jpg"
+        default:
+            urlString = "http://www.alpha-exposiciones.com/wp-content/uploads/2018/03/marathonweek_expo15_mm-106_r1.jpg"
+        }
         
+        let downloadOperation = DownloadImgOperation(urlString: urlString)
+        
+        downloadOperation.imageClosure = { (succes:Bool, image:UIImage?, error:Error?) in
+            if succes {
+                switch index {
+                case 1:
+                    self.img1 = image
+                    
+                case 2:
+                    self.img2 = image
+                    
+                case 3:
+                    self.img3 = image
+                    
+                default:
+                    self.img4 = image
+                }
+             
+            } else {
+                print(error!)
+            }
+    }
+            
+            return downloadOperation
         
     }
 
@@ -128,23 +92,58 @@ class ImageViewController: UIViewController {
 
         activityIndicator.startAnimating()
         button.isEnabled = false
-
-        let myConcurrentQueue = DispatchQueue(label: "MyQueue", attributes: .concurrent)
         
-        myConcurrentQueue.async(execute: closure1)
-        myConcurrentQueue.async(execute: closure2)
-        myConcurrentQueue.async(execute: closure3)
-        myConcurrentQueue.async(execute: closure4)
-
-
-        DispatchQueue.main.async{
-
-                self.activityIndicator.stopAnimating()
-                button.isEnabled = true
-
-            }
+        let viewOperation1 = BlockOperation {
+            self.imageView1.image = self.img1
+        }
+        let downloadOperation1 = self.giveMeDownloadOperationFor(index: 1)
+        viewOperation1.addDependency(downloadOperation1)
         
+        let viewOperation2 = BlockOperation {
+            self.imageView2.image = self.img2
+        }
+       let downloadOperation2 = self.giveMeDownloadOperationFor(index: 2)
+       viewOperation2.addDependency(downloadOperation2)
+       viewOperation2.addDependency(viewOperation1)
+        
+        let viewOperation3 = BlockOperation {
+            self.imageView3.image = self.img3
+        }
+        let downloadOperation3 = self.giveMeDownloadOperationFor(index: 3)
+        viewOperation3.addDependency(downloadOperation3)
+        viewOperation3.addDependency(viewOperation2)
+        
+        let viewOperation4 = BlockOperation {
+            self.imageView4.image = self.img4
+        }
+         let downloadOperation4 = self.giveMeDownloadOperationFor(index: 4)
+        viewOperation4.addDependency(downloadOperation4)
+        viewOperation4.addDependency(viewOperation3)
+        
+    
+        
+        mainOpQueue.addOperation(viewOperation4)
+        mainOpQueue.addOperation(viewOperation3)
+        mainOpQueue.addOperation(viewOperation2)
+        mainOpQueue.addOperation(viewOperation1)
+        
+        let userViewOperation = BlockOperation {
+            self.activityIndicator.stopAnimating()
+            button.isEnabled = true
+            
+        }
+        
+        userViewOperation.addDependency(viewOperation4)
+        mainOpQueue.addOperation(userViewOperation)
+        
+       // operationQueue.maxConcurrentOperationCount = 1
+    operationQueue.addOperations([downloadOperation1,downloadOperation2,downloadOperation3,downloadOperation4], waitUntilFinished: false)
+        
+            
 
+ 
+        
+      print("Guarde todas")
 
     }
 }
