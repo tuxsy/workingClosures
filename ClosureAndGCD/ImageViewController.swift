@@ -23,23 +23,32 @@ class ImageViewController: UIViewController {
     let mainOpQueue = OperationQueue.main
     
     
-    var img1:UIImage?
+    @objc var img1:UIImage?
     
-    var img2:UIImage?
+    @objc var img2:UIImage?
     
-    var img3:UIImage?
-    var img4:UIImage?
+    @objc var img3:UIImage?
+    @objc var img4:UIImage?
     
-    
+    var observer: NSKeyValueObservation?
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-
+        observer = self.observe(\ImageViewController.img4, options: [.new], changeHandler: { (opQueue, change) in
             
-        }
+            if let img = change.newValue {
+                DispatchQueue.main.async {
+                  
+                     self.imageView4.image = img
+                    
+                    self.observer = nil
+                }
+            }
+            
+        })
         
-
+    }
     
 func giveMeDownloadOperationFor(index:Int) -> DownloadImgOperation
 {
@@ -60,19 +69,22 @@ func giveMeDownloadOperationFor(index:Int) -> DownloadImgOperation
         
         downloadOperation.imageClosure = { (succes:Bool, image:UIImage?, error:Error?) in
             if succes {
-                switch index {
-                case 1:
-                    self.img1 = image
-                    
-                case 2:
-                    self.img2 = image
-                    
-                case 3:
-                    self.img3 = image
-                    
-                default:
-                    self.img4 = image
-                }
+//                switch index {
+//                case 1:
+//                    self.img1 = image
+//
+//                case 2:
+//                    self.img2 = image
+//
+//                case 3:
+//                    self.img3 = image
+//
+//                default:
+//                    self.img4 = image
+//                }
+              self.setValue(image, forKey: "img\(index)")
+                
+
              
             } else {
                 print(error!)
@@ -85,8 +97,7 @@ func giveMeDownloadOperationFor(index:Int) -> DownloadImgOperation
 
 
     @IBAction func downloadImage(_ sender: Any) {
-        
-        
+    
         
         let button = sender as! UIButton
 
@@ -113,16 +124,16 @@ func giveMeDownloadOperationFor(index:Int) -> DownloadImgOperation
         viewOperation3.addDependency(downloadOperation3)
         viewOperation3.addDependency(viewOperation2)
         
-        let viewOperation4 = BlockOperation {
-            self.imageView4.image = self.img4
-        }
+//        let viewOperation4 = BlockOperation {
+//            self.imageView4.image = self.img4
+//        }
          let downloadOperation4 = self.giveMeDownloadOperationFor(index: 4)
-        viewOperation4.addDependency(downloadOperation4)
-        viewOperation4.addDependency(viewOperation3)
+     //   viewOperation4.addDependency(downloadOperation4)
+      //  viewOperation4.addDependency(viewOperation3)
         
     
         
-        mainOpQueue.addOperation(viewOperation4)
+        
         mainOpQueue.addOperation(viewOperation3)
         mainOpQueue.addOperation(viewOperation2)
         mainOpQueue.addOperation(viewOperation1)
@@ -133,8 +144,8 @@ func giveMeDownloadOperationFor(index:Int) -> DownloadImgOperation
             
         }
         
-        userViewOperation.addDependency(viewOperation4)
-        mainOpQueue.addOperation(userViewOperation)
+      //  userViewOperation.addDependency(viewOperation4)
+    //    mainOpQueue.addOperation(userViewOperation)
         
        // operationQueue.maxConcurrentOperationCount = 1
     operationQueue.addOperations([downloadOperation1,downloadOperation2,downloadOperation3,downloadOperation4], waitUntilFinished: false)
