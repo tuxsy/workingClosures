@@ -13,6 +13,13 @@ class DownloadImgOperation: Operation {
     let urlString: String
     var imageClosure: ((Bool, UIImage?, Error?) -> Void)?
     
+    var end = false
+    
+    override var isFinished: Bool {
+        
+        return end
+    }
+    
     init(urlString: String) {
         self.urlString = urlString
         
@@ -24,13 +31,26 @@ class DownloadImgOperation: Operation {
         if let endClosure = imageClosure {
             let url = URL(string: urlString)
             
-            do {
-                let imgData = try Data.init(contentsOf: url!)  // Heavy task.
-                endClosure(true, UIImage(data: imgData)!, nil)
-            } catch {
-                endClosure(false, nil, error)
+            
+            let request = URLRequest(url: url!)
+            
+            let dataTask = URLSession.shared.dataTask(with: request){
+                (data, response, error) in
+                if let realData = data {
+                    endClosure(true, UIImage(data: realData)!, nil)
+                } else {
+                    endClosure(false, nil, error)
+                }
+                
+                self.willChangeValue(forKey: "isFinished") // KVO.
+                self.end = true
+                _ = self.isFinished
+                self.didChangeValue(forKey: "isFinished")   // KVO
             }
+            
+            dataTask.resume()
+            
         }
     }
-
+    
 }
